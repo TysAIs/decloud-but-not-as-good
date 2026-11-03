@@ -140,17 +140,25 @@ function reopenOnboarding() {
 /**
  * Phone QR for the onboarding step. Rendered client-side so the address
  * never leaves the browser. A localhost address is useless on a phone, so
- * in that case we point at `./decloud qr` instead.
+ * in that case we point at `./decloud qr` instead — and surface the
+ * Funnel enablement walkthrough, because "no QR code" is almost always
+ * "Funnel is still off for your tailnet".
  */
 function generateOnboardingQRs() {
   var phoneContainer = document.getElementById('qr-phone');
   var hint = document.getElementById('onboarding-url-hint');
+  var tip = document.getElementById('onboarding-funnel-tip');
   var host = window.location.hostname;
   var isLocal = host === 'localhost' || host === '::1' || host === '[::1]' || /^127\./.test(host);
   if (isLocal) {
     if (hint) hint.textContent = 'On your computer, run ./decloud qr to get a code your phone can scan.';
+    // Opened on the computer itself: there is no public URL to scan yet, so
+    // show the one-time Funnel setup. Hide it when we already arrived over a
+    // public/tailnet address (the tunnel clearly works).
+    if (tip) tip.style.display = '';
     return;
   }
+  if (tip) tip.style.display = 'none';
   if (phoneContainer && !phoneContainer.hasChildNodes()) {
     var img = generateQR(window.location.origin, 300);
     if (img) phoneContainer.appendChild(img);

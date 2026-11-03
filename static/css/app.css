@@ -4385,6 +4385,18 @@ body {
 .settings-note-ok { color: var(--green, #4a9); font-style: normal; }
 .settings-note-err { color: var(--red, #e55); font-style: normal; }
 
+/* Loud "this is not a view-only password" block — the passcode gates a shell. */
+.settings-warning {
+  margin: 8px 0 12px; padding: 10px 12px;
+  border-left: 3px solid var(--orange);
+  background: var(--glass);
+  border-radius: 8px;
+  font-size: 0.78rem; line-height: 1.45;
+  color: var(--text-dim);
+}
+.settings-warning strong { display: block; margin-bottom: 4px; color: var(--orange); }
+.settings-warning span { display: block; margin-top: 6px; font-size: 0.72rem; }
+
 /* About — made by + socials */
 .about-madeby { margin-top: 8px; font-size: 0.8rem; color: var(--text); font-weight: 600; }
 .about-socials { display: flex; gap: 12px; margin-top: 4px; }

@@ -449,6 +449,11 @@
       </div>
       <div class="settings-group">
         <div class="settings-label">Passcode</div>
+        <div class="settings-warning" id="passcode-warning">
+          <strong>This passcode unlocks a shell on this machine.</strong>
+          It is the only thing standing between the internet and this computer: the web terminal runs commands as you, the file browser can delete or shred files, and Settings can change your config and install updates. Don't share it, and don't send it alongside the URL or QR code.
+          <span>Stronger: 10 digits (the maximum) is 100× harder to guess than 8, and tailnet-only access skips the public URL entirely — see docs/PERMANENT_TUNNEL.md.</span>
+        </div>
         <div class="settings-row">
           <span>Current</span>
           <input type="password" id="pin-current" class="settings-input" placeholder="Current passcode" autocomplete="off">
@@ -1150,6 +1155,16 @@
     <div class="onboarding-step" data-step="2">
       <h1>Your Passcode Is the Key</h1>
       <p>The passcode you just typed is the only way in. <strong>Write it down somewhere safe</strong> — a password manager, or paper you keep at home.</p>
+      <div class="onboarding-tip">
+        <strong>What this one code unlocks</strong>
+        <ul>
+          <li><strong>Your terminal</strong> — the web terminal runs real commands on this computer, as you, with your files and your permissions.</li>
+          <li><strong>Your files</strong> — the file browser can read, download, <em>delete</em> and shred anything DeCloud can see.</li>
+          <li><strong>Settings and updates</strong> — change the configuration and install new versions of DeCloud.</li>
+        </ul>
+      </div>
+      <p>That is a lot of power for one short number, so treat it like your login password: <strong>don't share it</strong>, and don't post it next to the URL or QR code. DeCloud is a single-owner app — there are no separate accounts for guests.</p>
+      <p>Want it stronger? Use the longest passcode DeCloud accepts (10 digits, in Settings → Passcode) — every extra digit makes guessing 10× harder — or keep DeCloud off the public internet entirely with tailnet-only access (see docs/PERMANENT_TUNNEL.md).</p>
       <p>Forgot it? On this computer, open a terminal in the DeCloud folder and run <code>./decloud pin</code> to see it, or <code>./decloud pin reset</code> for a new one.</p>
     </div>
 
@@ -1159,6 +1174,17 @@
       <p>Open DeCloud on your phone, then choose "Add to Home Screen" so it works like a regular app.</p>
       <div id="qr-phone" style="text-align:center;margin:12px 0"></div>
       <p class="empty-hint" id="onboarding-url-hint" style="text-align:center;font-size:0.8em;word-break:break-all"></p>
+      <div class="onboarding-tip" id="onboarding-funnel-tip" style="display:none">
+        <strong>No QR code, or the link won't open on your phone?</strong>
+        <p>DeCloud reaches your phone through Tailscale Funnel, and Tailscale keeps Funnel <em>off</em> until you enable it once for your tailnet:</p>
+        <ol>
+          <li>Open the <a href="https://login.tailscale.com/admin/settings/funnel" target="_blank" rel="noopener">Tailscale admin console → Settings → Funnel</a>.</li>
+          <li>Enable Funnel for your tailnet, then save.</li>
+          <li>On your computer, run <code>./decloud restart</code>, then <code>./decloud qr</code>.</li>
+        </ol>
+        <p><em>Success looks like:</em> <code>./decloud status</code> reports <code>Tunnel: ✓ active</code> with an <code>https://….ts.net</code> address, and that address opens this login screen on a phone that is not on your tailnet.</p>
+        <p>Only your own devices need access? Leave the public URL off and use tailnet-only Tailscale Serve — see <code>docs/PERMANENT_TUNNEL.md</code>.</p>
+      </div>
     </div>
 
     <!-- Step 4: Done -->
