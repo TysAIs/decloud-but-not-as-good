@@ -7,9 +7,21 @@ from flask import Blueprint, jsonify
 
 bp = Blueprint('version', __name__)
 
-VERSION = "0.5.3"
+VERSION = "0.5.4"
 
 CHANGELOG = [
+    {
+        "version": "0.5.4",
+        "date": "2026-11-03",
+        "changes": [
+            "Beginner friction: Funnel enablement guidance and passcode-gravity warnings",
+            "Installers and ./decloud detect a disabled tailnet Funnel and print the one-time admin-console steps, success criteria and ./decloud funnel-help",
+            "No public URL no longer blames cloudflared",
+            "Onboarding and Settings state exactly what the passcode protects (terminal as you, file delete/shred, settings, updates)",
+            "Docs spell out the 10-digit and tailnet-only options",
+            "New copy-level regression tests for the guidance",
+        ]
+    },
     {
         "version": "0.5.3",
         "date": "2026-10-25",
