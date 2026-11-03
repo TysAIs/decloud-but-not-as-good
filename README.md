@@ -46,6 +46,11 @@ The installer:
 5. Starts a **public** tunnel via Tailscale Funnel (only when a passcode is set)
 6. Prints the URL + QR code for your phone
 
+> **Before the phone QR code can work, Funnel must be enabled once for your
+> tailnet.** Tailscale ships with Funnel off; see
+> [Enable Tailscale Funnel](#enable-tailscale-funnel-one-time). The installer
+> and `./decloud funnel-help` print the same steps if the tunnel can't start.
+
 ### Access from anywhere
 
 DeCloud uses **Tailscale Funnel** for secure remote access:
@@ -62,6 +67,30 @@ The first time you open DeCloud, enter your passcode to unlock (tap ✓ after ty
 > between the internet and your computer. **Don't share it** — DeCloud is a
 > single-owner app. If only your own devices need access, prefer
 > tailnet-only Tailscale Serve; see [docs/PERMANENT_TUNNEL.md](docs/PERMANENT_TUNNEL.md).
+
+### Enable Tailscale Funnel (one time)
+
+Tailscale ships with Funnel **off** for every tailnet, and only the admin
+console can turn it on — no CLI command enables it. Until you do, DeCloud
+runs fine locally but has no public URL, so the phone QR code never appears:
+
+1. Open the Tailscale admin console →
+   [Settings → Funnel](https://login.tailscale.com/admin/settings/funnel).
+2. Enable Funnel for your tailnet and save. (Tailnets with access rules also
+   need the `funnel` node attribute on this machine in the policy file.)
+3. On the DeCloud machine, run `sudo ./decloud restart`, then `./decloud qr`.
+
+**What success looks like:**
+
+```bash
+./decloud status          # → "Tunnel: ✓ active" plus a URL
+tailscale funnel status   # → "Funnel on" and an https://….ts.net URL
+curl -I https://your-machine.tail1234.ts.net   # → HTTP/2 200 (or a 302 to the login)
+```
+
+Then open that URL on a phone that is **not** on your tailnet: you should get
+the DeCloud login screen. `./decloud funnel-help` repeats this walkthrough at
+any time.
 
 ## Configuration
 

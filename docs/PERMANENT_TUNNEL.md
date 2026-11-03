@@ -16,13 +16,33 @@ DeCloud uses **Tailscale Funnel** for permanent remote access. This gives you a 
    sudo tailscale up
    ```
 
-3. **Start DeCloud** — it auto-detects Tailscale and starts a **public** Funnel
+3. **Enable Funnel for your tailnet (one time, admin console only)**:
+   Tailscale ships with Funnel **off**, and no CLI command turns it on. Until
+   you enable it, DeCloud starts but never gets a public URL — the phone QR
+   code silently never appears.
+
+   - Open [Tailscale admin console → Settings → Funnel](https://login.tailscale.com/admin/settings/funnel).
+   - Enable Funnel for your tailnet and save.
+   - If your tailnet uses access rules, the machine also needs the `funnel`
+     node attribute in the policy file.
+
+4. **Start DeCloud** — it auto-detects Tailscale and starts a **public** Funnel
    (it refuses to if no passcode is set):
    ```bash
    ./decloud start
    ```
 
 Your URL: `https://your-machine-name.tail1234.ts.net`
+
+**Confirm it worked** (do this on a phone that is *not* on your tailnet):
+```bash
+./decloud status          # → "Tunnel: ✓ active" plus the public URL
+tailscale funnel status   # → "Funnel on" and the https://….ts.net URL
+curl -I https://your-machine-name.tail1234.ts.net   # → 200, or 302 to the login
+```
+The last check only works once the tunnel is up; before that it returns
+connection errors or a 502. `./decloud funnel-help` repeats these steps at any
+time.
 
 ## Why Tailscale Funnel?
 
@@ -35,12 +55,27 @@ Your URL: `https://your-machine-name.tail1234.ts.net`
 
 The passcode is not a "view-only" password: it unlocks the interactive
 terminal, the file manager (including delete/shred) and the self-updater —
-in effect, a shell on this machine as your user. Treat it like your login
-password:
+in effect, a shell on this machine as your user. Concretely, whoever has it
+can:
+
+- **Run commands** in the web terminal, as your user, with your permissions.
+- **Read, download, delete or shred** anything the file browser can reach.
+- **Change settings** and **install a different version** via the updater.
+
+Treat it like your login password:
 
 - Don't send it to friends or family, or share it alongside the URL or QR code.
 - If you think it leaked, change it in Settings (this signs out every device).
 - DeCloud is a single-owner app; there are no per-person accounts.
+
+**Stronger options** (same auth model, no code path changes needed):
+
+- Use the longest passcode DeCloud accepts — 10 digits in Settings → Passcode.
+  Each extra digit makes guessing 10× harder (8 digits ≈ 100 million
+  combinations; 10 digits ≈ 10 billion). Repeated wrong guesses are throttled,
+  but length is still the cheapest win.
+- Skip the public URL entirely with [Private-Only Mode](#private-only-mode-no-public-url)
+  below, so only devices signed in to your tailnet can reach the login screen.
 
 ## Alternative: Cloudflare Named Tunnel
 
@@ -89,10 +124,18 @@ HTTPS on your tailnet only — nothing is reachable from the internet:
 
 ## Troubleshooting
 
-**"Funnel failed"**
-- Check Tailscale is running: `tailscale status`
-- Check funnel is enabled: `tailscale funnel status`
-- Restart: `./decloud restart`
+**"Funnel failed" / no public URL / no QR code**
+
+The most common cause by far is Funnel not being enabled for your tailnet —
+Tailscale requires the admin console for that, and DeCloud can only report it:
+
+1. Open [Tailscale admin console → Settings → Funnel](https://login.tailscale.com/admin/settings/funnel)
+   and enable Funnel for your tailnet.
+2. Check Tailscale is running and logged in: `tailscale status`.
+3. Restart: `sudo ./decloud restart`, then `./decloud qr`.
+4. Still stuck? `./decloud funnel-help` prints the walkthrough, and running
+   `sudo tailscale funnel --bg --https=443 http://localhost:8899` by hand shows
+   Tailscale's exact error.
 
 **"URL not working"**
 - Wait 30 seconds for DNS propagation
