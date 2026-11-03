@@ -84,6 +84,41 @@ stop_app() {
     fi
 }
 
+# One-time Funnel enablement is done in the Tailscale admin console, never by
+# the CLI. Tailscale ships with Funnel OFF, so a first-timer who only installs
+# Tailscale gets a silent no-URL start: no public address, no phone QR code,
+# nothing that says why. This text is the fix for that moment — it says where
+# to click, what success looks like, and how to confirm the public URL works.
+funnel_help() {
+    echo ""
+    echo "📡 One-time setup: enable Funnel for your tailnet"
+    echo "════════════════════════════════════════════════════════════════"
+    echo "   Tailscale ships with Funnel OUT of the box. Until it is turned"
+    echo "   on, 'tailscale funnel' has nothing to publish — DeCloud starts"
+    echo "   fine but gets no public URL, so the phone QR code never appears."
+    echo ""
+    echo "   1. Open the Tailscale admin console:"
+    echo "        https://login.tailscale.com/admin/settings/funnel"
+    echo "      (Admin console → Settings → Funnel)"
+    echo "   2. Enable Funnel for your tailnet, then save."
+    echo "      If your tailnet uses access rules, the machine also needs the"
+    echo "      'funnel' node attribute in your tailnet policy file."
+    echo "   3. Back on this machine:  sudo ./decloud restart"
+    echo ""
+    echo "   What success looks like:"
+    echo "     ./decloud status         → \"Tunnel: ✓ active\" plus a URL"
+    echo "     tailscale funnel status  → \"Funnel on\" and your https://….ts.net URL"
+    echo "     curl -I <that URL>       → HTTP/2 200 (or a 302 to the login page)"
+    echo ""
+    echo "   Then './decloud qr' prints the QR code to open on your phone."
+    echo ""
+    echo "   Still failing? Run it yourself to see the exact error:"
+    echo "     sudo tailscale funnel --bg --https=443 http://localhost:$PORT"
+    echo "   Other causes: Tailscale logged out (tailscale status), or the"
+    echo "   machine is offline. Docs: docs/PERMANENT_TUNNEL.md"
+    echo ""
+}
+
 start_tunnel() {
     # Kill existing tunnel
     stop_tunnel
@@ -103,6 +138,16 @@ start_tunnel() {
         echo "⚠ Tailscale not running — skipping tunnel."
         echo "  Run: sudo tailscale up  (login to your account)"
         echo "  Then: ./decloud start"
+        return 1
+    fi
+
+    # Funnel is opt-in per tailnet. Catch the disabled case BEFORE starting
+    # in the background, where the only symptom is a missing URL.
+    FUNNEL_STATUS=$(tailscale funnel status 2>&1 || true)
+    if printf '%s' "$FUNNEL_STATUS" | grep -qiE 'funnel' \
+        && printf '%s' "$FUNNEL_STATUS" | grep -qiE 'not enabled|disabled|enable it|needs to be enabled'; then
+        echo "⚠ Tailscale Funnel is not enabled for this tailnet yet."
+        funnel_help
         return 1
     fi
 
@@ -132,7 +177,13 @@ start_tunnel() {
         return 0
     fi
 
-    echo "⚠ Funnel failed — check tunnel.log"
+    echo "⚠ Funnel failed — see tunnel.log for Tailscale's own error:"
+    echo "  $TUNNEL_LOG"
+    if [ -s "$TUNNEL_LOG" ]; then
+        echo ""
+        tail -5 "$TUNNEL_LOG" | sed 's/^/  | /'
+    fi
+    funnel_help
     return 1
 }
 
@@ -165,6 +216,8 @@ show_qr() {
         fi
         echo ""
         echo "Try: ./decloud restart"
+        echo ""
+        funnel_help
         return 1
     fi
     
@@ -252,6 +305,9 @@ case "${1:-}" in
     qr|url)
         show_qr
         ;;
+    funnel-help|funnel)
+        funnel_help
+        ;;
     status)
         status
         ;;
@@ -274,6 +330,7 @@ case "${1:-}" in
         echo "  restart — Restart app + tunnel"
         echo "  qr      — Show current tunnel URL + QR code"
         echo "  status  — Show what's running"
+        echo "  funnel-help — How to enable Tailscale Funnel (public URL + phone QR)"
         echo "  pin     — Show your passcode  (pin reset — get a new one, even if you forgot it)"
         echo "  version — Show DeCloud version"
         echo "  update  — Check/apply updates from the terminal"
