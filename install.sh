@@ -120,6 +120,28 @@ TUNNEL_TOOL=""
 if command -v tailscale &>/dev/null; then
     TUNNEL_TOOL="tailscale"
     echo "✓ Tunnel client ready (Tailscale Funnel)"
+
+    # Funnel is opt-in per tailnet and Tailscale ships with it OFF. Say so now,
+    # at the moment the user can still act on it — otherwise `decloud start`
+    # below produces a working app with no public URL and no explanation.
+    FUNNEL_STATUS=$(tailscale funnel status 2>&1 || true)
+    if printf '%s' "$FUNNEL_STATUS" | grep -qiE 'funnel' \
+        && printf '%s' "$FUNNEL_STATUS" | grep -qiE 'not enabled|disabled|enable it|needs to be enabled'; then
+        echo ""
+        echo "⚠ One-time step needed: Tailscale Funnel is not enabled for your tailnet."
+        echo "  Without it there is no public URL, so your phone can't reach DeCloud."
+        echo ""
+        echo "    1. Open the Tailscale admin console:"
+        echo "         https://login.tailscale.com/admin/settings/funnel"
+        echo "       (Admin console → Settings → Funnel)"
+        echo "    2. Enable Funnel for your tailnet, then save."
+        echo "    3. Come back here — the installer starts the tunnel for you."
+        echo ""
+        echo "  Success looks like: tailscale funnel status shows \"Funnel on\" and"
+        echo "  an https://….ts.net URL, and that URL opens the DeCloud login page."
+        echo "  The full walkthrough is also available later: ./decloud funnel-help"
+        echo ""
+    fi
 elif command -v cloudflared &>/dev/null; then
     TUNNEL_TOOL="cloudflared"
     echo "✓ Tunnel client ready (cloudflared — your own Cloudflare account)"
@@ -311,10 +333,17 @@ if [ -n "$TUNNEL_URL" ]; then
     echo "✓ Funnel active: $TUNNEL_URL"
     ACCESS_URL="$TUNNEL_URL"
 else
-    echo "⚠ Funnel not active yet. Local access only:"
+    echo "⚠ No public URL yet — DeCloud is reachable on this computer only:"
     ACCESS_URL="http://localhost:${PORT}"
     echo "  $ACCESS_URL"
-    echo "  To start the tunnel: sudo tailscale funnel ${PORT}"
+    echo ""
+    # `./decloud start` above already prints the full Funnel walkthrough when
+    # the tunnel can't start; don't repeat it, just point back at it.
+    if [ "$TUNNEL_TOOL" = "tailscale" ]; then
+        echo "  If Tailscale Funnel is still off for your tailnet, follow the"
+        echo "  steps above, then run: sudo ./decloud restart"
+        echo "  (Same walkthrough anytime: ./decloud funnel-help)"
+    fi
 fi
 
 # ─── Done ───────────────────────────────────────────────────────
@@ -363,7 +392,12 @@ echo ""
 # Print PIN
 if [ -n "$PIN" ]; then
     echo "🔐 Your access PIN: $PIN"
-    echo "   It unlocks a shell on this machine — don't share it."
+    echo "   This one code is what stands between the internet and this machine:"
+    echo "   it unlocks the web terminal (commands run as you), the file browser"
+    echo "   (read, download, delete), Settings, and app updates — a shell, in"
+    echo "   effect. Don't share it, and don't post it next to the URL or QR code."
+    echo "   Stronger options: use a 10-digit passcode (the maximum), or skip the"
+    echo "   public URL entirely with tailnet-only access — docs/PERMANENT_TUNNEL.md"
     echo "   (Change it: nano ${APP_DIR}/.env)"
     echo ""
 fi
@@ -387,6 +421,9 @@ elif [ -n "$TUNNEL_URL" ]; then
     echo "   Add to Home Screen for a native app experience:"
     echo "   • iPhone: Safari → Share → Add to Home Screen"
     echo "   • Android: Chrome → ⋮ → Add to Home screen"
+elif [ "$TUNNEL_TOOL" = "tailscale" ]; then
+    echo "📱 Phone access needs the one-time Funnel step above."
+    echo "   Enable it, run 'sudo ./decloud restart', then './decloud qr'."
 else
     echo "📱 Install cloudflared for phone access:"
     echo "   https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/"
