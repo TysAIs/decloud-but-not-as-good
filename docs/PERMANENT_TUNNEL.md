@@ -6,21 +6,40 @@ DeCloud uses **Tailscale Funnel** for permanent remote access. This gives you a 
 
 ## Quick Setup
 
-1. **Install Tailscale** (if not already):
+You only do this once. After that, the URL below never changes.
+
+1. **Create a free Tailscale account** at [tailscale.com](https://tailscale.com)
+   (the free tier is enough), then **install Tailscale** on this computer
+   (if not already):
    ```bash
    curl -fsSL https://tailscale.com/install.sh | sh
    ```
 
-2. **Start Tailscale**:
+2. **Start Tailscale** and sign in with that account:
    ```bash
    sudo tailscale up
    ```
+   A browser page opens (or the command prints a link) — sign in there.
 
-3. **Start DeCloud** — it auto-detects Tailscale and starts a **public** Funnel
+3. **Turn Funnel on for your tailnet (one time).** Funnel is off until the
+   tailnet allows it, and this is the step most first-timers miss:
+   - Open the [Tailscale admin console](https://login.tailscale.com/admin/dns)
+     (on your phone is fine) and sign in with the same account.
+   - On the **DNS** page, make sure **MagicDNS** is enabled, then enable
+     **HTTPS certificates**.
+   - The first time you run `./decloud start` (next step), Tailscale may
+     print a link saying Funnel is not available yet. Open that link,
+     sign in, and approve — it adds the Funnel permission for you.
+     Then run `./decloud start` again.
+
+4. **Start DeCloud** — it auto-detects Tailscale and starts a **public** Funnel
    (it refuses to if no passcode is set):
    ```bash
    ./decloud start
    ```
+
+5. **Open the URL on your phone**, type your passcode, and use
+   "Add to Home Screen" so DeCloud works like a regular app.
 
 Your URL: `https://your-machine-name.tail1234.ts.net`
 
@@ -40,6 +59,9 @@ password:
 
 - Don't send it to friends or family, or share it alongside the URL or QR code.
 - If you think it leaked, change it in Settings (this signs out every device).
+- Forgot it? There is no email or remote reset — you need this computer.
+  On it, run `./decloud pin` to see the passcode, or `./decloud pin reset`
+  for a new one (that signs out every device too).
 - DeCloud is a single-owner app; there are no per-person accounts.
 
 ## Alternative: Cloudflare Named Tunnel
@@ -88,6 +110,12 @@ HTTPS on your tailnet only — nothing is reachable from the internet:
    your tailnet.
 
 ## Troubleshooting
+
+**"Funnel not available" (a link like `tailscale.com/s/no-funnel` was printed)**
+- Funnel isn't turned on for your tailnet yet — do step 3 of Quick Setup:
+  enable MagicDNS + HTTPS certificates in the admin console, open the
+  printed link, sign in as the tailnet owner/admin, and approve.
+- Then run `./decloud start` again.
 
 **"Funnel failed"**
 - Check Tailscale is running: `tailscale status`
