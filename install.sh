@@ -127,6 +127,8 @@ else
     echo "⚠ No tunnel client available."
     echo "  Install Tailscale: curl -fsSL https://tailscale.com/install.sh | sh"
     echo "  Then: sudo tailscale up  (login to your account)"
+    echo "  First time? Funnel also needs a one-time OK in the Tailscale"
+    echo "  admin console — walkthrough: docs/PERMANENT_TUNNEL.md"
     echo "  (Alternative: install cloudflared from developers.cloudflare.com)"
 fi
 
@@ -314,7 +316,11 @@ else
     echo "⚠ Funnel not active yet. Local access only:"
     ACCESS_URL="http://localhost:${PORT}"
     echo "  $ACCESS_URL"
-    echo "  To start the tunnel: sudo tailscale funnel ${PORT}"
+    echo "  Most common cause on a first install: Funnel is not turned on"
+    echo "  for your tailnet yet. If 'tailscale funnel status' printed an"
+    echo "  approval link, open it, sign in, and approve — then re-run:"
+    echo "    ./decloud start"
+    echo "  Step-by-step: docs/PERMANENT_TUNNEL.md"
 fi
 
 # ─── Done ───────────────────────────────────────────────────────
@@ -330,32 +336,16 @@ if [ -n "$TUNNEL_URL" ]; then
     echo "📱 PUBLIC URL (Tailscale Funnel): $TUNNEL_URL"
     echo "   PIN: ${PIN:-set in .env}"
     echo ""
-    echo "⚠️  This tunnel URL changes every few hours. For permanent access:"
-    echo ""
-    echo "📌 SETUP PERMANENT TUNNEL (5 min):"
-    echo ""
-    echo "   1. Install cloudflared:"
-    if [ "$OS_TYPE" = "macos" ]; then
-        echo "      brew install cloudflared"
-    else
-        echo "      sudo apt install cloudflared  # or: sudo dnf install cloudflared"
-    fi
-    echo ""
-    echo "   2. Create a free Cloudflare account & tunnel:"
-    echo "      cloudflared tunnel login"
-    echo "      cloudflared tunnel create decloud"
-    echo ""
-    echo "   3. Point a domain (yours or free subdomain):"
-    echo "      cloudflared tunnel route dns decloud mydomain.com"
-    echo ""
-    echo "   4. Run the tunnel:"
-    echo "      cloudflared tunnel run decloud"
-    echo ""
-    echo "   Result: https://decloud.mydomain.com (permanent, never changes)"
+    echo "   This URL is permanent — it does not change. Bookmark it or"
+    echo "   add it to your phone's Home Screen (see the QR code below)."
+    echo "   Anyone who opens it still needs the PIN to get in."
     echo ""
     echo "🔐 ALTERNATIVE (Private-only access):"
-    echo "   Use Tailscale for permanent HTTPS from your own devices:"
-    echo "      sudo tailscale serve https / http://localhost:${PORT}"
+    echo "   If only your own devices need access, Tailscale Serve keeps"
+    echo "   DeCloud off the public internet entirely:"
+    echo "      sudo tailscale funnel --https=443 off"
+    echo "      sudo tailscale serve --bg http://localhost:${PORT}"
+    echo "   Details: docs/PERMANENT_TUNNEL.md"
     echo ""
 fi
 echo ""
@@ -364,7 +354,10 @@ echo ""
 if [ -n "$PIN" ]; then
     echo "🔐 Your access PIN: $PIN"
     echo "   It unlocks a shell on this machine — don't share it."
-    echo "   (Change it: nano ${APP_DIR}/.env)"
+    echo "   Write it down somewhere safe. See it again anytime with:"
+    echo "     ./decloud pin"
+    echo "   Forgot it later? ./decloud pin reset makes a new one"
+    echo "   (and signs out every device)."
     echo ""
 fi
 
@@ -388,8 +381,14 @@ elif [ -n "$TUNNEL_URL" ]; then
     echo "   • iPhone: Safari → Share → Add to Home Screen"
     echo "   • Android: Chrome → ⋮ → Add to Home screen"
 else
-    echo "📱 Install cloudflared for phone access:"
-    echo "   https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/"
+    echo "📱 For phone access, set up Tailscale Funnel (free):"
+    echo "   1. curl -fsSL https://tailscale.com/install.sh | sh"
+    echo "   2. sudo tailscale up   (sign in to your account)"
+    echo "   3. ./decloud start"
+    echo "   First time, Tailscale may ask you to approve Funnel in the"
+    echo "   admin console — step-by-step: docs/PERMANENT_TUNNEL.md"
+    echo "   Until then, DeCloud works on this computer:"
+    echo "   http://localhost:${PORT}"
 fi
 
 echo ""
