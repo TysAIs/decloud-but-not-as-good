@@ -55,7 +55,32 @@ DeCloud uses **Tailscale Funnel** for secure remote access:
 - **End-to-end encrypted** — WireGuard + TLS 1.3
 - **Public** — anyone with the link reaches the login screen
 
+**First time with Funnel?** Funnel is off until your tailnet allows it.
+One-time setup (2 minutes, phone is fine): in the
+[Tailscale admin console](https://login.tailscale.com/admin/dns) enable
+**MagicDNS** and **HTTPS certificates**. If `./decloud start` prints a
+"Funnel not available" link, open it, sign in, and approve — then run
+`./decloud start` again. Full walkthrough:
+[docs/PERMANENT_TUNNEL.md](docs/PERMANENT_TUNNEL.md).
+
 The first time you open DeCloud, enter your passcode to unlock (tap ✓ after typing).
+
+#### Your passcode
+
+- The installer creates a random 8-digit passcode and prints it once at the
+  end of install. It is stored in `.env` (as `DECLOUD_PIN`) on this computer.
+- It protects **everything** — files, the terminal, settings, updates —
+  not just viewing. Anyone with the passcode and the URL has full control
+  of this machine.
+- **See it again:** on this computer, run `./decloud pin`.
+- **Forgot it?** There is no email or remote reset — you need this
+  computer. Run `./decloud pin reset`: press Enter when asked for the old
+  one, confirm, and you get a new passcode. Resetting (or changing it in
+  Settings) signs out every phone and browser, so each one signs in again
+  with the new passcode.
+- **Change it:** Settings (you'll type the current one; new passcodes set
+  there are 8 to 10 numbers), `./decloud pin reset`, or edit `DECLOUD_PIN`
+  in `.env` and restart.
 
 > ⚠️ **The passcode unlocks a shell on your machine** (terminal, files,
 > updates). Funnel URLs are public, so the passcode is all that stands
@@ -142,6 +167,16 @@ No changes to `app.py` needed.
 ## Optional Integrations
 
 ### Ollama (AI Chat)
+
+AI Chat runs on a local model via Ollama — nothing is sent to a cloud AI.
+Until Ollama is installed and a model is downloaded, AI Chat just shows a
+note saying so; everything else works.
+
+Easiest path (no terminal): open DeCloud → **System** → **AI Model
+Advisor**, and tap **Get** on a chat model that fits your machine — it
+downloads and imports into Ollama for you.
+
+Manual path:
 ```bash
 # Install: https://ollama.com
 ollama pull llama3.2
